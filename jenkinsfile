@@ -1,1 +1,33 @@
+pipeline {
+    agent any
+    options {
+        skipStagesAfterUnstable()
+    }
+    stages {
+         stage('Clone repository') { 
+            steps { 
+                script{
+                checkout scm
+                }
+            }
+        }
 
+        stage('CI') { 
+            steps { 
+                script{
+                 app = docker.build("flask-calc-pyproject")
+                }
+            }
+        }
+        stage('CD') {
+            steps {
+                script{
+                        docker.withRegistry('474464315698.dkr.ecr.us-west-2.amazonaws.com', 'ecr:us-west-2:aws-credentials') {
+                    app.push("${env.BUILD_NUMBER}")
+                    app.push("latest")
+                    }
+                }
+            }
+        }
+    }
+}
